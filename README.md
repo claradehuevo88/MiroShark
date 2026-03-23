@@ -219,8 +219,4 @@ AGPL-3.0. See [LICENSE](./LICENSE).
 
 ## Credits
 
-Built on [MiroFish](https://github.com/666ghj/MiroFish) by [666ghj](https://github.com/666ghj), originally supported by [Shanda Group](https://www.shanda.com/).
-
-The Neo4j + Ollama storage layer was adapted from [MiroFish-Offline](https://github.com/nikmcfly/MiroFish-Offline) by [nikmcfly](https://github.com/nikmcfly) — the `GraphStorage` abstraction, Neo4j schema, embedding service, NER extractor, and hybrid search all originate there.
-
-Simulation engine powered by **[OASIS](https://github.com/camel-ai/oasis)** from the CAMEL-AI team.
+Built on [MiroFish](https://github.com/666ghj/MiroFish) by [666ghj](https://github.com/666ghj) (Shanda Group). Neo4j + Ollama storage layer adapted from [MiroFish-Offline](https://github.com/nikmcfly/MiroFish-Offline) by [nikmcfly](https://github.com/nikmcfly). Simulation engine powered by [OASIS](https://github.com/camel-ai/oasis) (CAMEL-AI).
