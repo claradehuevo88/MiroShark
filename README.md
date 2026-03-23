@@ -181,6 +181,59 @@ Open `http://localhost:3000`.
 | Prototype / testing | GPT-5 Nano |
 | Final report | Claude Opus 4.6 |
 
+### Recommended Models (Ollama — Local)
+
+> **Important:** Ollama defaults to only **4096 tokens** of context regardless of what the model supports. For MiroShark's 10–30k token prompts you *must* override this:
+>
+> ```bash
+> cat > Modelfile << 'EOF'
+> FROM qwen3:14b
+> PARAMETER num_ctx 32768
+> EOF
+> ollama create mirosharkai -f Modelfile
+> ```
+
+**Best overall — Qwen3 family**
+
+`qwen3.5:27b` hits 72.4% on SWE-bench, putting it in the same range as GPT-5 Mini — an open-weight model on a single consumer GPU.
+
+| Model | Pull command | VRAM needed | Context | Speed |
+|---|---|---|---|---|
+| `qwen3.5:27b` | `ollama pull qwen3.5:27b` | 20GB+ | 128K | ~40 t/s on 3090 |
+| `qwen3.5:35b-a3b` *(MoE)* | `ollama pull qwen3.5:35b-a3b` | 16GB | 128K | ~112 t/s (MoE!) |
+| `qwen3:14b` | `ollama pull qwen3:14b` | 12GB | 128K | ~60 t/s |
+| `qwen3:8b` | `ollama pull qwen3:8b` | 8GB | 40K* | ~42 t/s |
+
+The `35b-a3b` is a mixture-of-experts model that only activates 3B parameters per forward pass — 112 tokens/second on an RTX 3090. Quality is lower than the 27B dense model on hard problems, but for simulation agent calls it's fast enough to feel like a cloud API.
+
+*\*Qwen3 8b: 40K context on Ollama — tight but workable for smaller simulations.*
+
+**Budget / low VRAM**
+
+- `llama3.3:70b-instruct-q4_K_M` — 40GB+ RAM (CPU offload), strong instruction following, 128K context. Slow though.
+- `qwen2.5:14b` — 128K context, solid instruction following. Good fallback if Qwen3 is too new for your setup.
+
+**Hardware decision tree**
+
+| Your hardware | Pick |
+|---|---|
+| 24GB+ VRAM (RTX 3090/4090, M2 Pro 32GB+) | `qwen3.5:27b` — best quality |
+| 16GB VRAM (RTX 4080, M2 Pro 16GB) | `qwen3.5:35b-a3b` — fastest via MoE |
+| 12GB VRAM (RTX 4070, M1 Pro) | `qwen3:14b` — solid balance |
+| 8GB VRAM / laptop | `qwen3:8b` — minimum viable, watch context limits |
+
+**Embeddings locally**
+
+```bash
+ollama pull nomic-embed-text   # 768 dimensions — matches Neo4j default
+```
+
+Replaces `openai/text-embedding-3-small` for fully offline operation. Same 768-dim output, no API calls.
+
+**Hybrid setup**
+
+Run the local model for simulation rounds (cheap, high volume), then hit Gemini 3 Flash or Kimi K2 on OpenRouter for the final report generation step. Most users end up with this approach — local handles 70% of calls, cloud handles the quality-sensitive ones.
+
 ### Environment Variables
 
 All settings are in `.env` (copy from `.env.example`):
