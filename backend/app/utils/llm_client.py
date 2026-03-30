@@ -86,6 +86,10 @@ class LLMClient:
         """Check if we're talking to an Ollama server."""
         return '11434' in (self.base_url or '')
 
+    def _is_copilot(self) -> bool:
+        """Check if we're talking to GitHub Copilot."""
+        return 'githubcopilot.com' in (self.base_url or '')
+
     def chat(
         self,
         messages: List[Dict[str, str]],
@@ -93,18 +97,6 @@ class LLMClient:
         max_tokens: int = 4096,
         response_format: Optional[Dict] = None
     ) -> str:
-        """
-        Send a chat request
-
-        Args:
-            messages: List of messages
-            temperature: Temperature parameter
-            max_tokens: Maximum number of tokens
-            response_format: Response format (e.g., JSON mode)
-
-        Returns:
-            Model response text
-        """
         kwargs = {
             "model": self.model,
             "messages": messages,
@@ -123,7 +115,6 @@ class LLMClient:
 
         response = self.client.chat.completions.create(**kwargs)
         content = response.choices[0].message.content
-        # Some models (e.g., MiniMax M2.5) include <think> reasoning content in the content field, which needs to be removed
         content = re.sub(r'<think>[\s\S]*?</think>', '', content).strip()
         return content
 
@@ -133,22 +124,12 @@ class LLMClient:
         temperature: float = 0.3,
         max_tokens: int = 4096
     ) -> Dict[str, Any]:
-        """
-        Send a chat request and return JSON
-
-        Args:
-            messages: List of messages
-            temperature: Temperature parameter
-            max_tokens: Maximum number of tokens
-
-        Returns:
-            Parsed JSON object
-        """
+        # GitHub Copilot does not support response_format=json_object
         response = self.chat(
             messages=messages,
             temperature=temperature,
             max_tokens=max_tokens,
-            response_format={"type": "json_object"}
+            response_format=None if self._is_copilot() else {"type": "json_object"}
         )
         # Clean up markdown code block markers
         cleaned_response = response.strip()
